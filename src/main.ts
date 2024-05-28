@@ -1,4 +1,4 @@
-import { Actor, CollisionType, Text, Color, Engine, vec, Font } from "excalibur"
+import { Actor, CollisionType, Text, Color, Engine, vec, Font, Label, FontUnit, Input, SoundEvents, Sound, Loader } from "excalibur"
 import { vector } from "excalibur/build/dist/Util/DrawUtil"
 
 //  1 - Criar uma instancia de engine que representa o jogo
@@ -6,6 +6,11 @@ const game = new Engine({
   width: 800,
   height: 600
 })
+
+// Adicionando sons
+  const som = new Sound('./src/sounds/Src_sounds_match.mp3')
+  const carregar = new Loader([som])
+  await game.start(carregar)
 
 // 2 - Criar barra do player
 const barra = new Actor({
@@ -41,7 +46,7 @@ bolinha.body.collisionType = CollisionType.Passive
 
 // 5 - Física da bolinha
 
-const VeloBol = vec(2000, 2000)
+const VeloBol = vec(500, 500)
 
 // Após 1 segundo (1000ms), define a velocidade da bolinha em x = 100 e y = 100 
 setTimeout(() => {
@@ -124,34 +129,59 @@ listaBlocos.forEach(bloco => {
 // Adicionando pontuação
 let pontos = 0
 
-const textopontos = new Text({
-  text: "Hello World",
-  font: new Font({ size: 20 })
-})
-const objetoTexto = new Actor({
-  x: game.drawWidth - 50,
-  y: game.drawHeight - 50
+// const textopontos = new Text({
+//   text: "Hello World",
+//   font: new Font({ size: 20 })
+// })
+// const objetoTexto = new Actor({
+//   x: game.drawWidth - 50,
+//   y: game.drawHeight - 50
+// })
+
+// Label = Text + Actor
+
+const textopontos = new Label({
+  text: pontos.toString(),
+  font: new Font({
+    size: 40,
+    color: Color.White,
+    strokeColor: Color.Black,
+    unit: FontUnit.Px
+  }),
+  pos: vec(600, 500)
 })
 
-objetoTexto.graphics.use(textopontos)
-game.add(objetoTexto)
+game.add(textopontos)
 
 let colidindo: boolean = false
 
-bolinha.on("collisionstart", (event) => {
+  
+
+bolinha.on("collisionstart", async (event) => {
+  
+  
   // Verificando se colidiu com blocos destrutiveis
   if (listaBlocos.includes(event.other)) {
+    
     // Destruindo bloco
-    event.other.kill()}
-
-    // Rebater a bolinha - Inverter 
-    let interseccao = event.contact.mtv.normalize() //mtv = "minimum translation vector" é um vetor "normalizado()"
-
-    // !colidindo -> se não estiver colidindo
-
-    if (!colidindo){
-      colidindo = true
-
+    event.other.kill()
+    
+    // Adiciona os pontos
+    pontos++
+    
+    // Atualiza placar
+    textopontos.text = pontos.toString()
+  }
+  // Rebater a bolinha - Inverter 
+  let interseccao = event.contact.mtv.normalize() //mtv = "minimum translation vector" é um vetor "normalizado()"
+  
+  // !colidindo -> se não estiver colidindo
+  
+  if (!colidindo){
+    colidindo = true
+    // Adicionando Som
+    som.play(1);
+      
       // intersecção.x e intersecção.y
       //  O maior representa o eixo onde houve contato
       if (Math.abs(interseccao.x) > Math.abs(interseccao.y)) {
@@ -171,6 +201,10 @@ bolinha.on("collisionstart", (event) => {
     alert("F no chat")
     window.location.reload()
   })
+
+  if(pontos === 15) {
+    alert("Ganhou!")
+  }
 
 // Inicia o game
 game.start()
