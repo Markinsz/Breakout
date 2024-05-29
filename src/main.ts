@@ -1,5 +1,4 @@
-import { Actor, CollisionType, Text, Color, Engine, vec, Font, Label, FontUnit, Input, SoundEvents, Sound, Loader } from "excalibur"
-import { vector } from "excalibur/build/dist/Util/DrawUtil"
+import { Actor, CollisionType, Color, Engine, vec, Font, Label, FontUnit, Sound, Loader } from "excalibur"
 
 //  1 - Criar uma instancia de engine que representa o jogo
 const game = new Engine({
@@ -8,8 +7,10 @@ const game = new Engine({
 })
 
 // Adicionando sons
-  const som = new Sound('./src/sounds/Src_sounds_match.mp3')
-  const carregar = new Loader([som])
+  const somBater = new Sound('./src/sounds/Src_sounds_match.mp3')
+  const somMorte = new Sound('./src/sounds/Death.mp3')
+  const somWin = new Sound ('./src/sounds/WinSound.wav')
+  const carregar = new Loader([somMorte, somBater, somWin])
   await game.start(carregar)
 
 // 2 - Criar barra do player
@@ -35,6 +36,28 @@ game.input.pointers.primary.on("move", (event) => {
 })
 
 // 4 - Criar actor bolinha
+// Cores randomicas
+// const randomColor = [
+//   Color.Red,
+//   Color.Black,
+//   Color.Chartreuse,
+//   Color.Green,
+//   Color.Magenta,
+//   Color.Rose,
+//   Color.Viridian,
+//   Color.Cyan,
+//   Color.Azure,
+//   Color.ExcaliburBlue,
+//   Color.Yellow,
+//   Color.LightGray,
+//   Color.White,
+//   Color.Violet,
+//   Color.DarkGray,
+//   Color.Gray,
+//   Color.Transparent,
+//   Color.Vermilion
+// ]
+
 const bolinha = new Actor({
   x: 100,
   y: 300,
@@ -57,6 +80,8 @@ bolinha.on("postupdate", () => {
   // Se a bolinha colidir com o lado direito
   if (bolinha.pos.x < bolinha.width / 2) {
     bolinha.vel.x = VeloBol.x
+    // Bolinha em cor randomica
+    // bolinha.color = randomColor[Math.trunc(Math.random() * randomColor.length)]
   }
   // Se a bolinha colidir com o lado esquerdo
   if (bolinha.pos.x + bolinha.width / 2 > game.drawWidth) {
@@ -171,6 +196,16 @@ bolinha.on("collisionstart", async (event) => {
     
     // Atualiza placar
     textopontos.text = pontos.toString()
+
+    // Bolinha da cor do bloco destruido
+    bolinha.color = event.other.color
+
+    // Alert Ganhou
+    if(pontos == 15) {
+      somWin.play(1)
+      alert("Congratulações! Você venceu!")
+      window.location.reload()
+    }
   }
   // Rebater a bolinha - Inverter 
   let interseccao = event.contact.mtv.normalize() //mtv = "minimum translation vector" é um vetor "normalizado()"
@@ -180,7 +215,7 @@ bolinha.on("collisionstart", async (event) => {
   if (!colidindo){
     colidindo = true
     // Adicionando Som
-    som.play(1);
+    somBater.play(1);
       
       // intersecção.x e intersecção.y
       //  O maior representa o eixo onde houve contato
@@ -198,13 +233,12 @@ bolinha.on("collisionstart", async (event) => {
 
   // Perdendo
   bolinha.on("exitviewport", () => {
+    somMorte.play(1)
+    .then (() => {
     alert("F no chat")
     window.location.reload()
   })
-
-  if(pontos === 15) {
-    alert("Ganhou!")
-  }
+})
 
 // Inicia o game
 game.start()
